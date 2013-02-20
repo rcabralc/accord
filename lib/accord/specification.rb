@@ -1,29 +1,20 @@
 require 'set'
+require 'accord/ro'
 
 module Accord
   class SpecificationAncestry
     include Enumerable
 
-    def initialize(spec, bases)
+    def initialize(spec)
       @spec = spec
-      @bases = bases
-      @results ||=
-        begin
-          seen = Set.new([@spec])
-          results = [@spec]
-          @bases.each do |base|
-            base.ancestry.each do |spec|
-              next if seen.include?(spec)
-              seen << spec
-              results << spec
-            end
-          end
-          results
-        end
     end
 
     def each
-      @results.each { |result| yield(result) }
+      results.each { |result| yield(result) }
+    end
+
+    def results
+      @results ||= Accord::RO.ro(@spec) { |spec| spec.bases }
     end
   end
 
@@ -44,7 +35,7 @@ module Accord
     end
 
     def bases
-      @bases || []
+      (@bases || []).dup
     end
 
     def bases= new_bases
@@ -64,7 +55,7 @@ module Accord
     end
 
     def changed(originally_changed)
-      @ancestry = SpecificationAncestry.new(self, bases)
+      @ancestry = SpecificationAncestry.new(self)
       @dependents.each do |dependent|
         dependent.changed(originally_changed)
       end

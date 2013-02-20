@@ -42,11 +42,11 @@ module Accord
 
       let(:expected_base_order) {[
         spec,
-        base3,
-        most_basic,
+        base4,
         base2,
         base1,
-        base4,
+        base3,
+        most_basic,
       ]}
 
       it "orders the ancestry just like ruby's module resolution order" do
@@ -129,7 +129,7 @@ module Accord
         expect(other_spec.ancestors).to include(base)
       end
 
-      it "cannot modify bases directly" do
+      it "cannot modify ancestors through modifying returned bases directly" do
         base = Specification.new
         spec.bases << base
 

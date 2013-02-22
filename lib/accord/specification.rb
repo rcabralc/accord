@@ -2,27 +2,17 @@ require 'set'
 require 'accord/ro'
 
 module Accord
-  class SpecificationAncestry
-    include Enumerable
-
-    def initialize(spec)
-      @spec = spec
-    end
-
-    def each
-      results.each { |result| yield(result) }
-    end
-
-    def results
-      @results ||= Accord::RO.ro(@spec) { |spec| spec.bases }
-    end
-  end
-
   class Specification
-    attr_reader :ancestry
-
-    def initialize(bases=[])
+    def initialize(*args)
+      if args.size == 2 || args.first.is_a?(String) || args.first.is_a?(Symbol)
+        @name = args.first.to_s
+        bases = (args.size == 2 ? (args[1] || []) : [])
+      else
+        @name = '?'
+        bases = args.first || []
+      end
       @dependents = Set.new
+      @ro = Accord::RO.new(self) { |spec| spec.bases }
       self.bases = bases
     end
 
@@ -55,7 +45,7 @@ module Accord
     end
 
     def changed(originally_changed)
-      @ancestry = SpecificationAncestry.new(self)
+      @ro.changed
       @dependents.each do |dependent|
         dependent.changed(originally_changed)
       end
@@ -77,15 +67,15 @@ module Accord
     end
 
     def ancestors
-      @ancestry.to_a
+      @ro.resolve
     end
 
     def extends?(other)
-      @ancestry.include?(other)
+      ancestors.include?(other)
     end
 
     def inspect
-      "<Specification bases=#{bases.inspect}>"
+      "<Specification #{@name.inspect}>"
     end
   end
 end

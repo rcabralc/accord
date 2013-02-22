@@ -33,24 +33,73 @@ module Accord
     end
 
     describe "specification ancestry ordering" do
-      let(:most_basic) { Specification.new }
-      let(:base1)      { Specification.new([most_basic]) }
-      let(:base2)      { Specification.new([base1, most_basic]) }
-      let(:base3)      { Specification.new([most_basic]) }
-      let(:base4)      { Specification.new([base2, base3]) }
-      let(:spec)       { Specification.new([base3, base2, base4]) }
+      # Note that spec ancestors are not sorted like Ruby's module ancestors.
+      #
+      # The expected results should match the C3 algorithm.  For more
+      # information, refer to the MRO used in Python (introduced in Python
+      # 2.3): http://www.python.org/download/releases/2.3/mro/
 
-      let(:expected_base_order) {[
-        spec,
-        base4,
-        base2,
-        base1,
-        base3,
-        most_basic,
-      ]}
+      let(:root) { Specification.new(:root) }
 
-      it "orders the ancestry just like ruby's module resolution order" do
-        expect(spec.ancestors).to eq expected_base_order
+      describe "impossible" do
+        let(:a) { Specification.new([root]) }
+        let(:b) { Specification.new([a, root]) }
+        let(:c) { Specification.new([root]) }
+        let(:d) { Specification.new([b, c]) }
+        # let(:s5) { Specification.new([c, b, d]) } # This should break
+
+        it "rejects such hierarchy" do
+          # This hierarchy is rejected because local order prececedence cannot
+          # be satisfied without violating monotonicity.
+          expect { Specification.new([c, b, d]) }.to raise_error(TypeError)
+        end
+      end
+
+      describe "possible" do
+        let(:a) { Specification.new(:a, [root]) }
+        let(:b) { Specification.new(:b, [root]) }
+        let(:c) { Specification.new(:c, [root]) }
+        let(:d) { Specification.new(:d, [c, a]) }
+        let(:e) { Specification.new(:e, [c, b]) }
+        let(:f) { Specification.new(:f, [e, d]) }
+
+        let(:expected_resolution_order) { [f, e, d, c, b, a, root] }
+
+        subject { f }
+        its(:ancestors) { should eq expected_resolution_order }
+      end
+
+      describe "possible" do
+        let(:a) { Specification.new(:a, [root]) }
+        let(:b) { Specification.new(:b, [root]) }
+        let(:c) { Specification.new(:c, [root]) }
+        let(:d) { Specification.new(:d, [c, a]) }
+        let(:e) { Specification.new(:e, [b, c]) }
+        let(:f) { Specification.new(:f, [e, d]) }
+
+        let(:expected_resolution_order) { [f, e, b, d, c, a, root] }
+
+        subject { f }
+        its(:ancestors) { should eq expected_resolution_order }
+      end
+
+      describe "possible" do
+        let(:a)  { Specification.new(:a,  [root]) }
+        let(:b)  { Specification.new(:b,  [root]) }
+        let(:c)  { Specification.new(:c,  [root]) }
+        let(:d)  { Specification.new(:d,  [root]) }
+        let(:e)  { Specification.new(:e,  [root]) }
+        let(:k1) { Specification.new(:k1, [a, b, c]) }
+        let(:k2) { Specification.new(:k2, [d, b, e]) }
+        let(:k3) { Specification.new(:k3, [d, a]) }
+        let(:z)  { Specification.new(:z,  [k1, k2, k3]) }
+
+        let(:expected_resolution_order) do
+          [z, k1, k2, k3, d, a, b, c, e, root]
+        end
+
+        subject { z }
+        its(:ancestors) { should eq expected_resolution_order }
       end
     end
 

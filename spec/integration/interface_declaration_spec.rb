@@ -49,6 +49,9 @@ describe "Accord::Interface method" do
       responds_to :method1 do
         param :argument
       end
+
+      responds_to :method2, params: { param: :default }
+      responds_to :method3, params: :argument
     end
   end
 
@@ -233,6 +236,18 @@ describe "Accord::Interface method" do
 
     specify "tags on methods are not inherited if the method is overridden" do
       expect(TestModule::OtherExtension[:method1].tags[:tag]).to be_nil
+    end
+
+    specify ":method2 has an optional parameter" do
+      expect(TestModule::OtherExtension[:method2].signature_info.arguments).to(
+        eq([{ name: :param, default: :default }])
+      )
+    end
+
+    specify ":method3 has a single required parameter" do
+      expect(TestModule::OtherExtension[:method3].signature_info.arguments).to(
+        eq([{ name: :argument }])
+      )
     end
   end
 end

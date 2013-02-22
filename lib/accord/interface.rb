@@ -31,11 +31,6 @@ module Accord
       yield(self)
     end
 
-    def changed(originally_changed)
-      @iro = nil
-      super
-    end
-
     def iro
       @iro ||= ancestors.select { |spec| spec.is_a?(InterfaceClass) }
     end
@@ -64,6 +59,13 @@ module Accord
 
     def implemented_by?(cls_or_mod)
       Accord::Declarations.implemented_by(cls_or_mod).extends?(self)
+    end
+
+  protected
+
+    def changed(originally_changed)
+      @iro = nil
+      super
     end
   end
 

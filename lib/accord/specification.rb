@@ -16,14 +16,6 @@ module Accord
       self.bases = bases
     end
 
-    def subscribe(dependent)
-      @dependents << dependent
-    end
-
-    def unsubscribe(dependent)
-      @dependents.delete(dependent)
-    end
-
     def bases
       (@bases || []).dup
     end
@@ -42,13 +34,6 @@ module Accord
       @bases = new_bases
 
       changed(self)
-    end
-
-    def changed(originally_changed)
-      @ro.changed
-      @dependents.each do |dependent|
-        dependent.changed(originally_changed)
-      end
     end
 
     def each_interface
@@ -76,6 +61,23 @@ module Accord
 
     def inspect
       "<Specification #{@name.inspect}>"
+    end
+
+  protected
+
+    def changed(originally_changed)
+      @ro.changed
+      @dependents.each do |dependent|
+        dependent.changed(originally_changed)
+      end
+    end
+
+    def subscribe(dependent)
+      @dependents << dependent
+    end
+
+    def unsubscribe(dependent)
+      @dependents.delete(dependent)
     end
   end
 end

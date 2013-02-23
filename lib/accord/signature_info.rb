@@ -19,12 +19,8 @@ module Accord
       arguments << arg
     end
 
-    def splat(name=nil)
-      if name
-        @splat = name.to_sym
-      else
-        @splat
-      end
+    def splat(name)
+      arguments << { name: name.to_sym, splat: true }
     end
 
     def block(name=nil)

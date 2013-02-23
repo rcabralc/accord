@@ -27,21 +27,17 @@ module Accord
     end
 
     describe "#splat" do
-      it "returns nil if no splat argument has been set" do
-        expect(subject.splat).to be_nil
-      end
-
       context "with a symbol" do
-        it "sets a splat argument" do
+        it "adds a splat argument" do
           subject.splat(:foo)
-          expect(subject.splat).to eq :foo
+          expect(subject.arguments).to eq [ { name: :foo, splat: true } ]
         end
       end
 
       context "with a string" do
         it "sets a splat argument, as a symbol" do
           subject.splat('foo')
-          expect(subject.splat).to eq :foo
+          expect(subject.arguments).to eq [ { name: :foo, splat: true } ]
         end
       end
     end

@@ -67,27 +67,27 @@ describe "Single adapters" do
   describe "detecting exactly matches" do
     specify "getting less specific" do
       registry.register([ir1], ip1, '') { 11 }
-      expect(registry.detect(required: [ir1], provided: ip1).call).to eq 11
+      expect(registry.first(required: [ir1], provided: ip1).call).to eq 11
     end
 
     specify "getting more specific" do
-      expect(registry.detect(required: [ir1], provided: ip2).call).to eq 12
+      expect(registry.first(required: [ir1], provided: ip2).call).to eq 12
     end
 
     specify "getting more specific with name" do
       registry.register([ir1], ip2, 'bob') { "Bob's 12" }
       expect(
-        registry.detect(required: [ir1], provided: ip2, name: 'bob').call
+        registry.first(required: [ir1], provided: ip2, name: 'bob').call
       ).to eq "Bob's 12"
     end
 
     specify "using more specific required interface" do
       registry.register([ir2], ip2, '') { 21 }
-      expect(registry.detect(required: [ir2], provided: ip2).call).to eq 21
+      expect(registry.first(required: [ir2], provided: ip2).call).to eq 21
     end
 
     specify "missing by trying to get a unregistered adapter" do
-      expect(registry.detect(required: [ir2], provided: ip2)).to be_nil
+      expect(registry.first(required: [ir2], provided: ip2)).to be_nil
     end
   end
 end

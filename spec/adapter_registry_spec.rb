@@ -28,36 +28,36 @@ module Accord
       end
     end
 
-    describe "#detect" do
+    describe "#first" do
       it "returns no adapter when registry is empty" do
-        expect(subject.detect).to be_nil
+        expect(subject.first).to be_nil
       end
 
       context "registered most simple single adapter" do
         it "returns that if no arguments are passed" do
           subject.register([Interface], Interface, '', &adapter_factory)
-          expect(subject.detect).to be adapter_factory
+          expect(subject.first).to be adapter_factory
         end
       end
 
       it "hits right adapter factory if matches" do
         subject.register([i1], nil, '', &adapter_factory)
         expect(
-          subject.detect(required: [i1], provided: nil, name: '')
+          subject.first(required: [i1], provided: nil, name: '')
         ).to be adapter_factory
       end
 
       it "miss adapter factory if none matches" do
         subject.register([i1], nil, '', &adapter_factory)
         expect(
-          subject.detect(required: [i2], provided: nil, name: '')
+          subject.first(required: [i2], provided: nil, name: '')
         ).to be_nil
       end
     end
 
-    describe "#select" do
+    describe "#all" do
       it "returns no adapter when empty" do
-        expect(subject.select).to be_empty
+        expect(subject.all).to be_empty
       end
 
       context "registered most simple single adapter" do
@@ -66,7 +66,7 @@ module Accord
         end
 
         it "returns that if no arguments are passed" do
-          expect(subject.select).to eq [['', adapter_factory]]
+          expect(subject.all).to eq [['', adapter_factory]]
         end
       end
 
@@ -74,7 +74,7 @@ module Accord
         it "returns all registered adapters" do
           subject.register([nil], nil, &adapter_factory)
           subject.register([nil], nil, 'other name', &other_adapter_factory)
-          expect(subject.select(required: [nil], provided: nil)).to eq [
+          expect(subject.all(required: [nil], provided: nil)).to eq [
             ['',           adapter_factory],
             ['other name', other_adapter_factory]
           ]
@@ -92,7 +92,7 @@ module Accord
       it "allows registering a null adapter" do
         subject.register([], i1, '', &adapter_factory)
         expect(
-          subject.detect(required: [], provided: i1, name:'')
+          subject.first(required: [], provided: i1, name:'')
         ).to be adapter_factory
       end
 
@@ -100,9 +100,7 @@ module Accord
         it "defaults to most simple single adapter" do
           subject.register([nil], nil, '', &adapter_factory)
           expect(
-            subject.detect(required: [Interface],
-                           provided: Interface,
-                           name: '')
+            subject.first(required: [Interface], provided: Interface, name: '')
           ).to be adapter_factory
         end
       end
@@ -111,9 +109,7 @@ module Accord
         it "defaults to most simple single adapter" do
           subject.register(nil, nil, '', &adapter_factory)
           expect(
-            subject.detect(required: [Interface],
-                           provided: Interface,
-                           name: '')
+            subject.first(required: [Interface], provided: Interface, name: '')
           ).to be adapter_factory
         end
       end
@@ -122,7 +118,7 @@ module Accord
         it "defaults to empty name" do
           subject.register([nil], nil, &adapter_factory)
           expect(
-            subject.detect(required: [nil], provided: nil, name: '')
+            subject.first(required: [nil], provided: nil, name: '')
           ).to be adapter_factory
         end
       end
@@ -242,7 +238,7 @@ module Accord
         subject.register([i1], nil, '', &adapter_factory)
         subject.unregister([i2], nil, '')
         expect(
-          subject.detect(required: [i1], provided: nil, name: '')
+          subject.first(required: [i1], provided: nil, name: '')
         ).to be adapter_factory
       end
 
@@ -250,7 +246,7 @@ module Accord
         subject.register([nil], i1, '', &adapter_factory)
         subject.unregister([nil], i2, '')
         expect(
-          subject.detect(required: [nil], provided: i1, name: '')
+          subject.first(required: [nil], provided: i1, name: '')
         ).to be adapter_factory
       end
 
@@ -258,7 +254,7 @@ module Accord
         subject.register([i1], nil, '', &adapter_factory)
         subject.unregister([i1], nil, 'other name')
         expect(
-          subject.detect(required: [i1], provided: nil, name: '')
+          subject.first(required: [i1], provided: nil, name: '')
         ).to be adapter_factory
       end
 
@@ -267,7 +263,7 @@ module Accord
         subject.register([i1], nil, '', &adapter_factory)
         subject.unregister([i1], nil, '', stub)
         expect(
-          subject.detect(required: [i1], provided: nil, name: '')
+          subject.first(required: [i1], provided: nil, name: '')
         ).to be adapter_factory
       end
 
@@ -276,7 +272,7 @@ module Accord
         subject.register([i1], nil, '', &adapter_factory)
         subject.unregister([i1], nil, '')
         expect(
-          subject.detect(required: [i1], provided: nil, name: '')
+          subject.first(required: [i1], provided: nil, name: '')
         ).to be_nil
       end
 
@@ -284,7 +280,7 @@ module Accord
         it "defaults to most simple single adapter" do
           subject.register([Interface], Interface, '', &adapter_factory)
           subject.unregister([nil], nil, '')
-          expect(subject.detect).to be_nil
+          expect(subject.first).to be_nil
         end
       end
 
@@ -292,7 +288,7 @@ module Accord
         it "defaults to most simple single adapter" do
           subject.register([Interface], Interface, '', &adapter_factory)
           subject.unregister(nil, nil, '')
-          expect(subject.detect).to be_nil
+          expect(subject.first).to be_nil
         end
       end
     end

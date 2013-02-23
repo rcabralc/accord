@@ -81,21 +81,21 @@ describe "Accord::Interface method" do
     end
 
     it "has a single method" do
-      expect(TestModule::Base.method_names).to eq [:method1]
-      expect(TestModule::Base.own_method_names).to eq [:method1]
+      expect(TestModule::Base.member_names).to eq [:method1]
+      expect(TestModule::Base.own_member_names).to eq [:method1]
     end
 
     it "iterates only over :method1" do
       names = []
-      methods = []
+      members = []
 
-      TestModule::Base.each do |name, method|
+      TestModule::Base.each do |name, member|
         names << name
-        methods << method
+        members << member
       end
 
       expect(names).to eq [:method1]
-      expect(methods.map(&:interface)).to eq [TestModule::Base]
+      expect(members.map(&:interface)).to eq [TestModule::Base]
     end
 
     specify ":method1 doesn't require a parameter" do
@@ -157,7 +157,7 @@ describe "Accord::Interface method" do
 
   describe "Extension" do
     it "has :method1" do
-      expect(TestModule::Extension.method_names).to include(:method1)
+      expect(TestModule::Extension.member_names).to include(:method1)
       expect(TestModule::Extension).to be_defined(:method1)
     end
 
@@ -166,7 +166,7 @@ describe "Accord::Interface method" do
     end
 
     it "has :method2" do
-      expect(TestModule::Extension.method_names).to include(:method1)
+      expect(TestModule::Extension.member_names).to include(:method1)
       expect(TestModule::Extension).to be_defined(:method2)
     end
 
@@ -175,11 +175,11 @@ describe "Accord::Interface method" do
     end
 
     it "has :method1 and :method2 defined in this order" do
-      expect(TestModule::Extension.method_names).to eq [:method1, :method2]
+      expect(TestModule::Extension.member_names).to eq [:method1, :method2]
     end
 
     it "has :method2 defined in itself" do
-      expect(TestModule::Extension.own_method_names).to eq [:method2]
+      expect(TestModule::Extension.own_member_names).to eq [:method2]
     end
 
     specify ":method2 requires a parameter with a default value" do

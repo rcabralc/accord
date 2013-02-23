@@ -30,5 +30,47 @@ module Accord
         @block
       end
     end
+
+    def match?(params)
+      args = normalized_arguments
+      match_without_all_required_args(args, params) ||
+        match_without_all_required_args(args, without_last_defaults(params))
+    end
+
+  private
+
+    def normalized_arguments
+      (arguments + (block ? [{ name: block, block: true }] : [])).map do |arg|
+        if arg[:splat]
+          :rest
+        elsif arg[:block]
+          :block
+        elsif arg.has_key?(:default)
+          :opt
+        else
+          :req
+        end
+      end
+    end
+
+    def without_last_defaults(params)
+      params = params.dup
+      params.pop if params.any? && params.last.first == :block
+      params.pop while params.any? && params.last.first == :opt
+      params
+    end
+
+    def match_without_all_required_args(args, params)
+      return false unless args.size == params.size
+      args.each_with_index do |arg, index|
+        if arg == :req && [:req, :opt].include?(params[index].first)
+          next
+        elsif params[index].first == arg
+          next
+        end
+        return false
+      end
+      true
+    end
   end
 end

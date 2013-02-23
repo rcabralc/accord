@@ -27,10 +27,12 @@ module Accord
       end
     end
 
+    Declarations.implements(Accord::Tags, Tags)
+
     # Objects that have a name and tags.
     Accord::Interface(self, :Element) do
-      # The object name
-      # @return [String] the name of the object.
+      # The object name.
+      # @return [String, Symbol] the name of the object.
       responds_to :name
 
       # Element tags.
@@ -38,36 +40,58 @@ module Accord
       responds_to :tags
     end
 
+    # The signature details of a method.
     Accord::Interface(self, :SignatureInfo) do
-      # Arguments
+      # Arguments.
       # @return [<Hash>] sequence of hashes with a `:name` key which is the
-      #   proposed name of the argument and an optional `:default` key which is
-      #   the default value of the argument, if any.  The arguments are listed
-      #   in the order they are expected by implementations.
+      #   proposed name of the argument, an optional `:default` key which is
+      #   the default value of the argument, if any, a `:splat` key which is
+      #   true if the argument is a splat (false/nil/unavailable otherwise).
+      #   The arguments are listed in the order they are expected by
+      #   implementations.
       responds_to :arguments
 
-      # Variable arguments name
-      # @return [Symbol] the name of the splat argument or nil if none is
-      #   expected.
-      responds_to :splat
-
-      # Block argument name
+      # Block argument name.
       # @return [Symbol] the name of the block argument or nil if none is
       #   expected.
       responds_to :block
     end
 
-    Accord::Interface(self, :Method) do
+    Declarations.implements(Accord::SignatureInfo, SignatureInfo)
+
+    # An interface member.
+    Accord::Interface(self, :Member) do
       extends Element
 
-      # The interface on which this method is defined.
+      # The member name.
+      # @return [Symbol] the name of the member.
+      responds_to :name
+
+      # The interface on which this member is defined.
       # @return [Interface]
       responds_to :interface
+
+      # Tests if the object is compatible with this member.
+      # @param object [Object] the object to be tested.
+      # @return [Boolean] true if the object is compatible, false otherwise.
+      responds_to :compatible_with_object?, params: :object
+
+      # Tests if the module is compatible with this member.
+      # @param mod [Module] the module to be tested.
+      # @return [Boolean] true if the module is compatible, false otherwise.
+      responds_to :compatible_with_module?, params: :mod
+    end
+
+    # A specialized interface member which represents a method.
+    Accord::Interface(self, :Method) do
+      extends Member
 
       # Signature information.
       # @return [SignatureInfo] signature info of the method.
       responds_to :signature_info
     end
+
+    Declarations.implements(Accord::InterfaceMethod, Method)
 
     Accord::Interface(self, :Specification) do
       # @return [<Specification>] the list of specifications from which this
@@ -96,6 +120,8 @@ module Accord
       responds_to :extends?, params: :other
     end
 
+    Declarations.implements(Accord::Specification, Specification)
+
     Accord::Interface(self, :Interface) do
       extends Element, Specification
 
@@ -103,39 +129,39 @@ module Accord
       # @return [<Interface>] the sequence of ancestors which are interfaces.
       responds_to :iro
 
-      # Interface methods names.
-      # @return [<Symbol>] the sequence of method names of the interface in the
-      #   order they were defined.
-      # @note All ancestors are verified.
-      responds_to :method_names
-
-      # All interface method names.
-      # @return [<Symbol>] the sequence of method names of the interface in the
+      # All interface member names.
+      # @return [<Symbol>] the sequence of member names of the interface in the
       #   order they were first defined.
-      # @note Return only methods defined in the interface.
-      responds_to :own_method_names
+      # @note All ancestors are verified.
+      responds_to :member_names
 
-      # Get the method object of a name.
-      # @param name [String, Symbol] the name of the method.
-      # @return [Method] the method or nil if the method doesn't exists.
+      # Interface member names.
+      # @return [<Symbol>] the sequence of member names of the interface in the
+      #   order they were defined.
+      # @note Return only members defined in the interface.
+      responds_to :own_member_names
+
+      # Get the member object of a name.
+      # @param name [String, Symbol] the name of the member.
+      # @return [Member] the member or nil if the member doesn't exists.
       # @note All ancestors are verified.
       responds_to :[], params: :name
 
       # Test whether the name is defined in the interface.
-      # @param name [String, Symbol] the name of the method.
-      # @return [Boolean] true if the method is defined.
+      # @param name [String, Symbol] the name of the member.
+      # @return [Boolean] true if the member is defined.
       # @note All ancestors are verified.
-      responds_to :defined?, params: [:name, { all: true }]
+      responds_to :defined?, params: :name
 
       # Test whether the name is defined in the interface.
-      # @param name [String, Symbol] the name of the method.
-      # @note All ancestors are verified.
-      # @return [Boolean] true if the method is defined in the interface.
-      responds_to :owns?, params: [:name, { all: true }]
+      # @param name [String, Symbol] the name of the member.
+      # @return [Boolean] true if the member is defined in the interface.
+      # @note Ancestors are ignored.
+      responds_to :owns?, params: :name
 
-      # Iterate over the methods defined by the interface in the order they
-      # where defined.
-      # @yield [name, Method] the name of the method as a symbol and the method
+      # Iterate over all members defined by this interface and its ancestors in
+      # the order they where defined.
+      # @yield [name, Member] the name of the member as a symbol and the member
       #   object.
       # @return [void]
       responds_to :each
@@ -175,7 +201,35 @@ module Accord
       # @param factory [Class, Module, Proc] the factory to test.
       # @return [Boolean] true if the interface is implemented by the factory.
       responds_to :implemented_by?, params: :factory
+
+      # Test if an object might provide this interface.
+      #
+      # This is done checking the object agains all members defined in this
+      # interface, including the correct signature for each method.  The
+      # signature may not have exactly the same argument names, but must match
+      # arity and accept block accordingly.
+      #
+      # @return [true] if the object passes all tests.
+      # @raise BrokenImplementation if the object doesn't provide some member
+      #   or provide it with the wrong signature.
+      # @raise DoesNotImplement if the object fails #provided_by?.
+      responds_to :verify_object, params: :object
+
+      # Test if a class or module might implement this interface.
+      #
+      # This is done checking the class or module methods agains all members
+      # defined in this interface, including the correct signature for each
+      # method.  The signature may not have exactly the same argument names,
+      # but must match arity and accept block accordingly.
+      #
+      # @return [true] if the class/module passes all tests.
+      # @raise BrokenImplementation if the class/module doesn't implements some
+      #   member or implements it with the wrong signature.
+      # @raise DoesNotImplement if the class/module fails #implemented_by?.
+      responds_to :verify_module, params: :mod
     end
+
+    Declarations.implements(Accord::InterfaceClass, Interface)
 
     Accord::Interface(self, :Declaration) do
       extends Specification
@@ -198,20 +252,105 @@ module Accord
       responds_to :-, params: :other
     end
 
+    Declarations.implements(Accord::Declarations::Declaration, Declaration)
+
     Accord::Interface(self, :InterfaceDeclarations) do
-      responds_to :provided_by,          params: :object
+      # Get the provided interfaces of an object
+      # @param object [Object] the target object.
+      # @return [Declaration] the provided interfaces.
+      responds_to :provided_by, params: :object
+
+      # Get the directly provided interfaces of an object, that is, those that
+      # are provided by the object independently of its class.
+      # @param object [Object] the target object.
+      # @return [Declaration] the provided interfaces.
       responds_to :directly_provided_by, params: :object
-      responds_to :implemented_by,       params: :factory
-      responds_to :implements,           params: [:factory, :"*interfaces"]
-      responds_to :implements_only,      params: [:factory, :"*interfaces"]
-      responds_to :directly_provides,    params: [:object,  :"*interfaces"]
-      responds_to :also_provides,        params: [:object,  :"*interfaces"]
-      responds_to :no_longer_provides,   params: [:object,  :interface]
+
+      # Get the interfaces implemented by a factory.
+      # @param factory [Module, Proc] the target factory.
+      # @return [Declaration] the implemented interfaces.
+      responds_to :implemented_by, params: :factory
+
+      # Declare interfaces implemented by a factory.
+      # @param factory [Module, Proc] the target factory.
+      # @param *interfaces [Interface] the interfaces of the declaration.
+      # @return [void]
+      responds_to :implements, params: [:factory, :"*interfaces"]
+
+      # Declare the only interfaces implemented by a factory.
+      # @param factory [Module, Proc] the target factory.
+      # @param *interfaces [Interface] the interfaces of the declaration.
+      # @return [void]
+      responds_to :implements_only, params: [:factory, :"*interfaces"]
+
+      # Declare the only interfaces directly provided by an object.
+      # @param object [Object] the target object.
+      # @param *interfaces [Interface] the interfaces of the declaration.
+      # @return [void]
+      responds_to :directly_provides, params: [:object,  :"*interfaces"]
+
+      # Declare additional interfaces provided by an object.
+      # @param object [Object] the target object.
+      # @param *interfaces [Interface] the interfaces of the declaration.
+      # @return [void]
+      responds_to :also_provides, params: [:object,  :"*interfaces"]
+
+      # Remove an interface provided by an object.
+      # @param object [Object] the target object.
+      # @param interface [Interface] the interface to be removed.
+      # @return [void]
+      responds_to :no_longer_provides, params: [:object,  :interface]
     end
 
+    Declarations.also_provides(Accord::Declarations, InterfaceDeclarations)
+
     Accord::Interface(self, :AdapterRegistry) do
-      responds_to :register, params: [:required, :provided, :name, :value]
+      responds_to :register do
+        param :required
+        param :provided
+        param name: ''
+        block :value
+      end
+
+      responds_to :unregister do
+        param :required
+        param :provided
+        param :name
+        param value: nil
+      end
+
+      responds_to :first, params: { options: {} }
+      responds_to :all, params: { options: {} }
+
+      responds_to :lookup, params: [:required, :provided, :"*args"]
+      responds_to :lookup_all, params: [:required, :provided]
+
+      responds_to :get, params: [:required, :provided, :"*args"]
     end
+
+    Declarations.implements(Accord::AdapterRegistry, AdapterRegistry)
+
+    Accord::Interface(self, :SubscriptionRegistry) do
+      responds_to :subscribe do
+        param :required
+        param :provided
+        block :value
+      end
+
+      responds_to :unsubscribe do
+        param :required
+        param :provided
+        param value: nil
+      end
+
+      responds_to :all, params: { options: {} }
+
+      responds_to :lookup, params: [:required, :provided]
+      responds_to :get, params: [:required, :provided]
+      responds_to :call, params: [:required, :provided]
+    end
+
+    Declarations.implements(Accord::SubscriptionRegistry, SubscriptionRegistry)
 
     Accord::Interface(self, :InterfaceBody) do
       # Declares that an object providing the interface should respond to a
@@ -326,5 +465,7 @@ module Accord
       # already extended are ignored.
       responds_to(:extends) { splat :interfaces }
     end
+
+    Declarations.implements(Accord::InterfaceBody, InterfaceBody)
   end
 end

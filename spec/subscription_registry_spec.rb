@@ -27,29 +27,29 @@ module Accord
       end
     end
 
-    describe "#select" do
+    describe "#all" do
       it "returns no adapter when registry is empty" do
-        expect(subject.select).to be_empty
+        expect(subject.all).to be_empty
       end
 
       context "subscribed most simple single subscriber" do
         it "returns that if no arguments are passed" do
           subject.subscribe([Interface], Interface, &subscriber)
-          expect(subject.select).to eq [subscriber]
+          expect(subject.all).to eq [subscriber]
         end
       end
 
       it "hits right subscriber if matches" do
         subject.subscribe([i1], nil, &subscriber)
         expect(
-          subject.select(required: [i1], provided: nil)
+          subject.all(required: [i1], provided: nil)
         ).to eq [subscriber]
       end
 
       it "miss subscriber if none matches" do
         subject.subscribe([i1], nil, &subscriber)
         expect(
-          subject.select(required: [i2], provided: nil)
+          subject.all(required: [i2], provided: nil)
         ).to be_empty
       end
     end
@@ -63,14 +63,14 @@ module Accord
 
       it "allows subscribing a null subscriber" do
         subject.subscribe([], i1, &subscriber)
-        expect(subject.select(required: [], provided: i1)).to eq [subscriber]
+        expect(subject.all(required: [], provided: i1)).to eq [subscriber]
       end
 
       it "subscribes multiple subscribers" do
         subject.subscribe([nil], nil, &subscriber)
         subject.subscribe([nil], nil, &other_subscriber)
         expect(
-          subject.select(required: [Interface], provided: Interface)
+          subject.all(required: [Interface], provided: Interface)
         ).to eq [subscriber, other_subscriber]
       end
 
@@ -78,7 +78,7 @@ module Accord
         it "defaults to most simple single subscriber" do
           subject.subscribe([nil], nil, &subscriber)
           expect(
-            subject.select(required: [Interface], provided: Interface)
+            subject.all(required: [Interface], provided: Interface)
           ).to eq [subscriber]
         end
       end
@@ -87,7 +87,7 @@ module Accord
         it "defaults to most simple single subscriber" do
           subject.subscribe(nil, nil, &subscriber)
           expect(
-            subject.select(required: [Interface], provided: Interface)
+            subject.all(required: [Interface], provided: Interface)
           ).to eq [subscriber]
         end
       end
@@ -138,7 +138,7 @@ module Accord
         subject.subscribe([i1], nil, &subscriber)
         subject.unsubscribe([i2], nil)
         expect(
-          subject.select(required: [i1], provided: nil)
+          subject.all(required: [i1], provided: nil)
         ).to eq [subscriber]
       end
 
@@ -146,7 +146,7 @@ module Accord
         subject.subscribe([nil], i1, &subscriber)
         subject.unsubscribe([nil], i2)
         expect(
-          subject.select(required: [nil], provided: i1)
+          subject.all(required: [nil], provided: i1)
         ).to eq [subscriber]
       end
 
@@ -155,7 +155,7 @@ module Accord
         subject.subscribe([i1], nil, &subscriber)
         subject.unsubscribe([i1], nil, stub)
         expect(
-          subject.select(required: [i1], provided: nil)
+          subject.all(required: [i1], provided: nil)
         ).to eq [subscriber]
       end
 
@@ -164,7 +164,7 @@ module Accord
         subject.subscribe([i1], nil, &other_subscriber)
         subject.unsubscribe([i1], nil, subscriber)
         expect(
-          subject.select(required: [i1], provided: nil)
+          subject.all(required: [i1], provided: nil)
         ).to eq [other_subscriber]
       end
 
@@ -173,7 +173,7 @@ module Accord
         subject.subscribe([i1], nil, &subscriber)
         subject.unsubscribe([i1], nil)
         expect(
-          subject.select(required: [i1], provided: nil)
+          subject.all(required: [i1], provided: nil)
         ).to be_empty
       end
 
@@ -182,7 +182,7 @@ module Accord
         subject.subscribe([i1], nil, &other_subscriber)
         subject.unsubscribe([i1], nil)
         expect(
-          subject.select(required: [i1], provided: nil, name: '')
+          subject.all(required: [i1], provided: nil, name: '')
         ).to be_empty
       end
 
@@ -190,7 +190,7 @@ module Accord
         it "defaults to most simple single adapter" do
           subject.subscribe([Interface], Interface, &subscriber)
           subject.unsubscribe([nil], nil)
-          expect(subject.select).to be_empty
+          expect(subject.all).to be_empty
         end
       end
 
@@ -198,7 +198,7 @@ module Accord
         it "defaults to most simple single adapter" do
           subject.subscribe([Interface], Interface, &subscriber)
           subject.unsubscribe(nil, nil)
-          expect(subject.select).to be_empty
+          expect(subject.all).to be_empty
         end
       end
     end

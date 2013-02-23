@@ -5,10 +5,17 @@ module Accord
   describe InterfaceBody do
     let(:interface) { stub }
     let(:bases) { [] }
-    let(:methods) { stub }
+    let(:members) { stub }
     let(:invariants) { stub }
+    let(:sig_info) { stub(:param => nil, :block => nil, :splat => nil) }
 
-    subject { InterfaceBody.new(interface, bases, methods, invariants) }
+    subject { InterfaceBody.new(interface, bases, members, invariants) }
+
+    before do
+      stub_const("Accord::SignatureInfo", stub)
+      stub_const("Accord::InterfaceMethod", stub)
+      Accord::SignatureInfo.stub(:new).and_return(sig_info)
+    end
 
     describe "#extends" do
       let(:base1) { stub }
@@ -35,20 +42,63 @@ module Accord
     end
 
     describe "#responds_to" do
+      let(:method) { stub }
+
+      before do
+        members.stub(:add)
+        InterfaceMethod.stub(:new).with(interface, :method, sig_info).
+          and_return(method)
+      end
+
       it "adds up methods" do
-        methods.should_receive(:add).with(:method)
+        members.should_receive(:add).with(:method, method)
         subject.responds_to(:method)
       end
 
-      it "adds the method passing the params, when they are given" do
-        methods.should_receive(:add).with(:method, params: 'params')
-        subject.responds_to(:method, params: 'params')
+      context "using :params option" do
+        context "to add a regular argument" do
+          it "creates a param in the signature info" do
+            sig_info.should_receive(:param).with(:foo)
+            subject.responds_to(:method, params: :foo)
+          end
+        end
+
+        context "to add a splat argument" do
+          it "creates a splat in the signature info" do
+            sig_info.should_receive(:splat).with(:foo)
+            subject.responds_to(:method, params: :"*foo")
+          end
+        end
+
+        context "to add a block argument" do
+          it "creates a block argument in the signature info" do
+            sig_info.should_receive(:block).with(:foo)
+            subject.responds_to(:method, params: :"&foo")
+          end
+        end
       end
 
-      it "forwards the block, if given" do
-        block = Proc.new { }
-        methods.should_receive(:add).with(:method, &block)
-        subject.responds_to(:method, &block)
+      context "using block" do
+        context "to add a regular argument" do
+          it "creates a param in the signature info" do
+            sig_info.should_receive(:param).with(:foo)
+            subject.responds_to(:method) { param :foo }
+          end
+        end
+
+        context "to add a splat argument" do
+          it "creates a splat in the signature info" do
+            sig_info.should_receive(:splat).with(:foo)
+            subject.responds_to(:method) { splat :foo }
+          end
+        end
+
+        context "to add a block argument" do
+          it "creates a block argument in the signature info" do
+            sig_info.should_receive(:block).with(:foo)
+            subject.responds_to(:method) { block :foo }
+          end
+        end
       end
     end
 
@@ -82,7 +132,7 @@ module Accord
       before do
         stub_const('Accord::Interface', root_interface)
         interface.stub(:bases=)
-        interface.stub(:methods)
+        interface.stub(:members)
         interface.stub(:invariants)
       end
 

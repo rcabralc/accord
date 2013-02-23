@@ -31,12 +31,6 @@ module Accord
       (registrations.by_order(required.size)[key] ||= []) << value
     end
 
-    def select(options={})
-      required = normalize_interfaces(options[:required] || [nil])
-      provided = options[:provided] || Interface
-      registrations.by_order(required.size)[[required, provided, '']] || []
-    end
-
     def unsubscribe(required, provided, value=nil)
       required = normalize_interfaces(required || [nil])
       provided ||= Interface
@@ -52,6 +46,12 @@ module Accord
       else
         lookup.delete(key)
       end
+    end
+
+    def all(options={})
+      required = normalize_interfaces(options[:required] || [nil])
+      provided = options[:provided] || Interface
+      registrations.by_order(required.size)[[required, provided, '']] || []
     end
 
     def lookup(required, provided)

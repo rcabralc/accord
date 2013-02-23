@@ -5,7 +5,7 @@ require 'accord/declarations'
 require 'accord/tags'
 require 'accord/signature_info'
 require 'accord/interface_body'
-require 'accord/interface_methods'
+require 'accord/interface_members'
 
 module Accord
   class << self
@@ -105,29 +105,29 @@ module Accord
       Accord::Declarations.implemented_by(cls_or_mod).extends?(self)
     end
 
-    def methods
-      @methods ||= InterfaceMethods.new(self)
+    def members
+      @members ||= InterfaceMembers.new(self)
     end
 
     def invariants
       @invariants ||= InterfaceInvariants.new(self)
     end
 
-    def method_names
+    def member_names
       iro.reverse.each_with_object([]) do |i, names|
-        i.methods.names.each do |name|
+        i.members.names.each do |name|
           names << name unless names.include?(name)
         end
       end
     end
 
-    def own_method_names
-      methods.names
+    def own_member_names
+      members.names
     end
 
     def [](name)
       owner = iro.detect { |i| i.owns?(name) }
-      owner.methods[name] if owner
+      owner.members[name] if owner
     end
 
     def defined?(name)
@@ -135,11 +135,13 @@ module Accord
     end
 
     def owns?(name)
-      methods.added?(name)
+      members.added?(name)
     end
 
     def each
-      methods.each { |name, method| yield(name, method) }
+      member_names.each do |name|
+        yield(name, self[name])
+      end
     end
 
     def assert_invariants?(object, errors=nil)
@@ -157,6 +159,24 @@ module Accord
       @tags ||= Tags.new
     end
 
+    def verify_object(object)
+      raise DoesNotImplement.new(self) unless provided_by?(object)
+
+      each do |name, member|
+        raise BrokenImplementation.new(self, name) unless \
+          member.compatible_with_object?(object)
+      end
+    end
+
+    def verify_module(mod)
+      raise DoesNotImplement.new(self) unless implemented_by?(mod)
+
+      each do |name, member|
+        raise BrokenImplementation.new(self, name) unless \
+          member.compatible_with_module?(mod)
+      end
+    end
+
   protected
 
     def changed(originally_changed)
@@ -166,6 +186,4 @@ module Accord
   end
 
   Interface = InterfaceClass.new(:'Accord::Interface')
-
-  class Invalid < Accord::Error; end
 end

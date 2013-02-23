@@ -27,25 +27,11 @@ module Accord
       AdapterLookup
     end
 
-    def register(required, provided, *args, &value)
+    def register(required, provided, name='', &value)
       raise ArgumentError, "cannot register without a block" unless value
-      name = args.size == 1 ? args.first : ''
       required = normalize_interfaces(required || [nil])
       provided ||= Interface
       registrations.by_order(required.size)[[required, provided, name]] = value
-    end
-
-    def detect(options={})
-      required = normalize_interfaces(options[:required] || [nil])
-      provided = options[:provided] || Interface
-      name     = options[:name] || ''
-      registrations.by_order(required.size)[[required, provided, name]]
-    end
-
-    def select(options={})
-      required = normalize_interfaces(options[:required] || [nil])
-      provided = options[:provided] || Interface
-      registrations.by_order(required.size).partial(required, provided)
     end
 
     def unregister(required, provided, name, value=nil)
@@ -60,6 +46,19 @@ module Accord
       return if !value.nil? && !old.equal?(value)
 
       lookup.delete(key)
+    end
+
+    def first(options={})
+      required = normalize_interfaces(options[:required] || [nil])
+      provided = options[:provided] || Interface
+      name     = options[:name] || ''
+      registrations.by_order(required.size)[[required, provided, name]]
+    end
+
+    def all(options={})
+      required = normalize_interfaces(options[:required] || [nil])
+      provided = options[:provided] || Interface
+      registrations.by_order(required.size).partial(required, provided)
     end
 
     def lookup(required, provided, *args)

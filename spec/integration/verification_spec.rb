@@ -1,6 +1,5 @@
 require 'spec_helper'
 require 'accord'
-require 'accord/interfaces'
 
 describe "Verification" do
   before do

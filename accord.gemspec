@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["rcabralc"]
   s.email       = ["rcabralc@gmail.com"]
-  s.homepage    = ""
+  s.homepage    = "http://rubygems.org/gems/accord"
   s.summary     = %q{Contracts and adaptation for Ruby}
   s.description = %q{Contracts and adaptation for Ruby}
 

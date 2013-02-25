@@ -9,8 +9,8 @@ Gem::Specification.new do |s|
   s.authors     = ["rcabralc"]
   s.email       = ["rcabralc@gmail.com"]
   s.homepage    = ""
-  s.summary     = %q{A gem providing contracts and adaptation for Ruby}
-  s.description = %q{A gem providing contracts and adaptation for Ruby}
+  s.summary     = %q{Contracts and adaptation for Ruby}
+  s.description = %q{Contracts and adaptation for Ruby}
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")

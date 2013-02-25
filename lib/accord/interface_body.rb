@@ -36,7 +36,7 @@ module Accord
       invariants = interface.invariants
 
       body = new(interface, bases, members, invariants)
-      body.instance_exec(&block)
+      body.instance_exec(&block) if block
 
       bases.unshift(Interface) if bases.empty?
       interface.bases = bases

@@ -55,6 +55,11 @@ describe "Accord::Interface method" do
     end
   end
 
+  it "can be declared without a block" do
+    Accord::Interface(TestModule, :Marker)
+    expect(TestModule::Marker).to be_a(Accord::InterfaceClass)
+  end
+
   describe "not constant" do
     it "has a simpler name" do
       expect(not_constant.name).to eq 'NotConstant'

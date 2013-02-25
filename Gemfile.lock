@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    accord (0.0.1)
+    accord (0.1.0)
 
 GEM
   remote: http://rubygems.org/

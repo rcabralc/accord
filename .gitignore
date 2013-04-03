@@ -4,4 +4,6 @@ pkg/*
 .bundle
 *.gem
 *.swp
+.ruby-version
+.rvmrc
 Session.vim

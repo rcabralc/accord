@@ -223,7 +223,7 @@ module Accord
       # but must match arity and accept block accordingly.
       #
       # @return [true] if the class/module passes all tests.
-      # @raise BrokenImplementation if the class/module doesn't implements some
+      # @raise BrokenImplementation if the class/module doesn't implement some
       #   member or implements it with the wrong signature.
       # @raise DoesNotImplement if the class/module fails #implemented_by?.
       responds_to :verify_module, params: :mod
